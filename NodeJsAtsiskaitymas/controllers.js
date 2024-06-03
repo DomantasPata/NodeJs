@@ -44,7 +44,7 @@ export async function getCompanyById(req, res) {
   try {
     const company = await Companies.findById(req.params.id, {
       __v: 0,
-    });
+    }).populate("profileId", "-__v");
     if (!company) {
       return res.status(404).json({ message: "Company not found" });
     }
@@ -121,6 +121,12 @@ export async function addCompanyProfile(req, res) {
       numberOfEmployees,
     });
     await newProfile.save();
+
+    const company = await Companies.findById(companyId);
+    if (company) {
+      company.profileId = newProfile._id;
+      await company.save();
+    }
 
     res.status(201).json(newProfile);
   } catch (error) {
