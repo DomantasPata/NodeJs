@@ -12,10 +12,10 @@ import {
 
 const router = express.Router();
 
-router.post("/company", addCompany);
+router.post("/companies", addCompany);
 router.get("/companies", getCompanies);
-router.get("/company/:id", getCompanyById);
-router.put("/company/:id", updateCompany);
+router.get("/companies/:id", getCompanyById);
+router.put("/companies/:id", updateCompany);
 router.get("/companyProfiles", getAllCompanyProfiles);
 router.post("/companyProfiles", addCompanyProfile);
 router.put("/companyProfiles/:id", updateProfile);

@@ -22,16 +22,20 @@ export async function addCompany(req, res) {
 
     res.status(201).json(Companies);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Bad request" });
   }
 }
 
 //Fetch all companies.
 
 export async function getCompanies(req, res) {
-  const companies = await Companies.find({}, { __v: 0 });
+  try {
+    const companies = await Companies.find({}, { __v: 0 });
 
-  res.json(companies);
+    res.json(companies);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch companies" });
+  }
 }
 
 //Fetch a single company by ID and it's company profile
@@ -40,11 +44,23 @@ export async function getCompanyById(req, res) {
   try {
     const company = await Companies.findById(req.params.id, {
       __v: 0,
-    }).populate("profileId");
-    if (!company) return res.status(404).json({ message: "Company not found" });
-    res.json(company);
+    });
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+    const companyProfile = await CompanyProfiles.findOne(
+      {
+        companyId: company._id,
+      },
+      { __v: 0 }
+    );
+    const companyWithProfile = {
+      ...company.toObject(),
+      profile: companyProfile,
+    };
+    res.json(companyWithProfile);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Bad request" });
   }
 }
 
@@ -54,22 +70,29 @@ export async function updateCompany(req, res) {
   const { id } = req.params;
   const { name, industry, location } = req.body;
 
-  const companies = await Companies.findById(id);
+  if (!name && !industry && !location) {
+    res.status(400).json({ message: "Invalid body information" });
+    return;
+  }
+  try {
+    const companies = await Companies.findById(id);
 
-  if (name) {
-    companies.name = name;
-  }
-  if (industry) {
-    companies.industry = industry;
-  }
-  if (location) {
-    companies.location = location;
-  }
-  await companies.save();
+    if (name) {
+      companies.name = name;
+    }
+    if (industry) {
+      companies.industry = industry;
+    }
+    if (location) {
+      companies.location = location;
+    }
+    await companies.save();
 
-  res.json(companies);
+    res.json(companies);
+  } catch (error) {
+    res.status(500).json({ message: "Error" });
+  }
 }
-
 //Fetch all company profiles.
 
 export async function getAllCompanyProfiles(req, res) {
@@ -77,7 +100,7 @@ export async function getAllCompanyProfiles(req, res) {
     const profiles = await CompanyProfiles.find();
     res.json(profiles);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Bad request" });
   }
 }
 
@@ -101,7 +124,7 @@ export async function addCompanyProfile(req, res) {
 
     res.status(201).json(newProfile);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Bad request" });
   }
 }
 
@@ -111,18 +134,22 @@ export async function updateProfile(req, res) {
   const { id } = req.params;
   const { founder, foundedYear, numberOfEmployees } = req.body;
 
-  const profile = await CompanyProfiles.findById(id);
+  try {
+    const profile = await CompanyProfiles.findById(id);
 
-  if (founder) {
-    profile.founder = founder;
-  }
-  if (foundedYear) {
-    profile.foundedYear = foundedYear;
-  }
-  if (numberOfEmployees) {
-    profile.numberOfEmployees = numberOfEmployees;
-  }
-  await profile.save();
+    if (founder) {
+      profile.founder = founder;
+    }
+    if (foundedYear) {
+      profile.foundedYear = foundedYear;
+    }
+    if (numberOfEmployees) {
+      profile.numberOfEmployees = numberOfEmployees;
+    }
+    await profile.save();
 
-  res.json(profile);
+    res.json(profile);
+  } catch (error) {
+    res.status(500).json({ message: "Bad request" });
+  }
 }
